@@ -46,6 +46,10 @@ button {
     cursor: pointer;
 }
 
+button:hover {
+    opacity: 0.85;
+}
+
 .container {
     max-width: 450px;
     margin: 20px auto;

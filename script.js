@@ -1,37 +1,100 @@
 
 let shoppingList = [];
 
+let editingIndex = null;
+
 const form = document.querySelector('form');
 const container = document.querySelector('.container');
-const total = document.querySelector('.total');
+const totalCostElement = document.querySelector('.total');
 const btns = document.querySelector('.btn-sections');
+
+function updateTotalCost() {
+    const total = shoppingList.reduce((sum, item) => {
+        if (item.purchased) {
+            return sum + Number(item.price || 0);
+        }
+
+        return sum;
+    }, 0);
+
+    totalCostElement.textContent =
+        `Total purchased: Ksh ${total.toFixed(2)}`;
+}
 
 function displayItems() {
     container.innerHTML = '';
 
     shoppingList.forEach((item, index) => {
-        const itemCard = `<div class="item">
-            <div id="details-${index}" class="${item.purchased ? 'purchased' : ''}">
-                <h4 class="title">${item.name}</h4>
-                <p class="price">Ksh ${Number(item.price).toFixed(2)}</p>
-            </div>
+        const itemCard = document.createElement('div');
 
-            <div class="check">
-                <input
-                    type="checkbox"
-                    id="mark-${index}"
-                    ${item.purchased ? 'checked' : ''}
-                    onchange="togglePurchased(${index})"
-                >
-                <label for="mark-${index}">Mark as purchased</label>
-                
-            </div>
-        </div>`;
+        itemCard.className =
+            `item ${item.purchased ? 'is-purchased' : ''}`;
 
-        container.insertAdjacentHTML('beforeend', itemCard);
+        if (editingIndex === index) {
+            itemCard.innerHTML = `
+                <div class="edit-form">
+                    <input
+                        type="text"
+                        class="edit-name"
+                        value="${escapeHTML(item.name)}"
+                        aria-label="Edit item name"
+                    >
+
+                    <input
+                        type="number"
+                        class="edit-price"
+                        value="${Number(item.price)}"
+                        min="0"
+                        step="0.01"
+                        aria-label="Edit item price"
+                    >
+
+                    <div class="inline-actions">
+                        <button type="button" class="save-edit">
+                            Save
+                        </button>
+
+                        <button type="button" class="cancel-edit">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            itemCard.innerHTML = `
+                <div class="item-details">
+                    <h4 class="title">${escapeHTML(item.name)}</h4>
+
+                    <p class="price">
+                        Ksh ${Number(item.price).toFixed(2)}
+                    </p>
+                </div>
+
+                <div class="check">
+                    <input
+                        type="checkbox"
+                        id="mark-${index}"
+                        ${item.purchased ? 'checked' : ''}
+                    >
+
+                    <label for="mark-${index}">
+                        Mark as purchased
+                    </label>
+
+                    <button
+                        type="button"
+                        class="edit-item"
+                    >
+                        Edit
+                    </button>
+                </div>
+            `;
+        }
+
+        container.appendChild(itemCard);
     });
 
-    updateTotal();
+    updateTotalCost();
 
     if (shoppingList.length > 0) {
         btns.classList.remove('hidden');
@@ -40,58 +103,83 @@ function displayItems() {
     }
 }
 
-function togglePurchased(index) {
-    const checkbox = document.getElementById(`mark-${index}`);
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, (character) => {
+        const characters = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        };
 
-    shoppingList[index].purchased = checkbox.checked;
-
-    saveList();
-    displayItems();
-}
-
-function updateTotal() {
-    let sum = 0;
-
-    shoppingList.forEach((item) => {
-        if (item.purchased) {
-            sum += Number(item.price);
-        }
+        return characters[character];
     });
-
-    total.textContent = `Total purchased: Ksh ${sum.toFixed(2)}`;
 }
 
-function editItem(index) {
-    const newName = prompt(
-        'Enter item name:',
-        shoppingList[index].name
-    );
+container.addEventListener('click', (e) => {
+    const itemCard = e.target.closest('.item');
 
-    if (newName === null || newName.trim() === '') {
-        return;
+    if (!itemCard) return;
+
+    const cards = Array.from(container.children);
+    const index = cards.indexOf(itemCard);
+
+    if (index === -1) return;
+
+    if (e.target.closest('.edit-item')) {
+        editingIndex = index;
+        displayItems();
     }
 
-    const newPrice = prompt(
-        'Enter item price:',
-        shoppingList[index].price
-    );
 
-    if (
-        newPrice === null ||
-        newPrice.trim() === '' ||
-        !Number.isFinite(Number(newPrice)) ||
-        Number(newPrice) < 0
-    ) {
-        alert('Please enter a valid price.');
-        return;
+    if (e.target.closest('.save-edit')) {
+        const nameInput = itemCard.querySelector('.edit-name');
+        const priceInput = itemCard.querySelector('.edit-price');
+
+        const newName = nameInput.value.trim();
+        const priceText = priceInput.value.trim();
+        const newPrice = Number(priceText);
+
+        if (
+            newName === '' ||
+            priceText === '' ||
+            !Number.isFinite(newPrice) ||
+            newPrice < 0
+        ) {
+            alert('Please enter a valid item name and price.');
+            return;
+        }
+
+        shoppingList[index].name = newName;
+        shoppingList[index].price = newPrice;
+
+        editingIndex = null;
+
+        saveList();
+        displayItems();
     }
 
-    shoppingList[index].name = newName.trim();
-    shoppingList[index].price = Number(newPrice);
+    
+    if (e.target.closest('.cancel-edit')) {
+        editingIndex = null;
+        displayItems();
+    }
+});
 
-    saveList();
-    displayItems();
-}
+container.addEventListener('change', (e) => {
+    if (e.target.matches('input[type="checkbox"]')) {
+        const itemCard = e.target.closest('.item');
+        const index = Array.from(container.children).indexOf(itemCard);
+
+        if (index === -1 || !shoppingList[index]) return;
+
+        shoppingList[index].purchased = e.target.checked;
+
+        saveList();
+        displayItems();
+    }
+});
 
 function saveList() {
     localStorage.setItem(
@@ -99,25 +187,46 @@ function saveList() {
         JSON.stringify(shoppingList)
     );
 }
-const savedList = localStorage.getItem('shoppingList');
 
-if (savedList) {
-    try {
-        shoppingList = JSON.parse(savedList);
-    } catch (error) {
-        shoppingList = [];
+function loadList() {
+    const savedList = localStorage.getItem('shoppingList');
+
+    if (savedList) {
+        try {
+            const parsedList = JSON.parse(savedList);
+
+            if (Array.isArray(parsedList)) {
+                shoppingList = parsedList
+                    .filter((item) =>
+                        item &&
+                        typeof item.name === 'string' &&
+                        item.name.trim() !== '' &&
+                        Number.isFinite(Number(item.price)) &&
+                        Number(item.price) >= 0
+                    )
+                    .map((item) => ({
+                        name: item.name,
+                        price: Number(item.price),
+                        purchased: item.purchased === true
+                    }));
+            }
+        } catch (error) {
+            shoppingList = [];
+        }
     }
 }
+
 
 form.addEventListener('submit', (e) => {
     e.preventDefault();
 
     const itemName = form.product.value.trim();
-    const itemPrice = Number(form.price.value);
+    const priceText = form.price.value.trim();
+    const itemPrice = Number(priceText);
 
     if (
         itemName === '' ||
-        form.price.value === '' ||
+        priceText === '' ||
         !Number.isFinite(itemPrice) ||
         itemPrice < 0
     ) {
@@ -138,9 +247,11 @@ form.addEventListener('submit', (e) => {
 
 document.querySelector('.clear-list').addEventListener('click', () => {
     shoppingList = [];
+    editingIndex = null;
 
     saveList();
     displayItems();
 });
 
+loadList();
 displayItems();
