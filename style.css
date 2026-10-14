@@ -1,0 +1,119 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+    background-color: #f5f5f5;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.list-form {
+    max-width: 450px;
+    margin: auto;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid grey;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: white;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid grey;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    background-color: #0096c7;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.container {
+    max-width: 450px;
+    margin: 20px auto;
+}
+
+.item {
+    background-color: white;
+    border: 1px solid grey;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.title {
+    margin-bottom: 5px;
+}
+
+.price {
+    margin-top: 5px;
+}
+
+.check {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.check input {
+    cursor: pointer;
+}
+
+.check label {
+    font-size: 14px;
+}
+
+.check button {
+    padding: 6px 10px;
+}
+
+.purchased {
+    text-decoration: line-through;
+    color: grey;
+}
+
+.total-section {
+    max-width: 450px;
+    margin: 15px auto;
+    padding: 15px;
+    background-color: white;
+    border: 1px solid grey;
+    border-radius: 10px;
+}
+
+.total {
+    font-weight: bold;
+}
+
+.btn-sections {
+    max-width: 450px;
+    margin: 15px auto;
+}
+
+.clear-list {
+    background-color: crimson;
+}
+
+.hidden {
+    display: none;
+}
